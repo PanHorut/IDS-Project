@@ -13,7 +13,6 @@ DROP TABLE "TTeritorium";
 DROP TABLE "THostitel";
 DROP TABLE "TKocka";
 DROP TABLE "TRasa";
-DROP SEQUENCE LIFESEQUENCE;
 
 -- CREATING TABLES --
 CREATE TABLE "TRasa"(
@@ -50,7 +49,7 @@ CREATE TABLE "THostitel"(
 "mesto" VARCHAR2(50) NOT NULL,
 "psc" SMALLINT NOT NULL
     CHECK(LENGTH("psc") = 5),
-"rc" VARCHAR2(10) UNIQUE NOT NULL
+"rc" VARCHAR2(11) UNIQUE NOT NULL
     CHECK (LENGTH("rc") BETWEEN 9 AND 10 AND MOD(TO_NUMBER("rc"),11) = 0)
 
 );
@@ -62,16 +61,9 @@ CREATE TABLE "TTeritorium" (
 "kapacita" INT
 );
 
-CREATE SEQUENCE LIFESEQUENCE
-    START WITH 1
-    INCREMENT BY 1
-    MINVALUE 1
-    MAXVALUE 9
-    NOCYCLE
-    NOCACHE;
-
 CREATE TABLE "TZivot" (
-"poradi_zivota" INT DEFAULT LIFESEQUENCE.NEXTVAL NOT NULL,
+"poradi_zivota" INT NOT NULL
+        CHECK ("poradi_zivota" BETWEEN 1 AND 9),
 "datum_narozeni" DATE NOT NULL,
 "misto_narozeni" VARCHAR2(50),
 "datum_umrti" DATE DEFAULT NULL,
@@ -131,8 +123,8 @@ CONSTRAINT "kocka_hostitelID_fk"
 );
 
 CREATE TABLE "TRasaHostitel"(
-"id_rasy" VARCHAR2(100),
 "id_hostitele" INT,
+"id_rasy" VARCHAR2(100),
 CONSTRAINT "ID_rasa_hostitel"
         PRIMARY KEY ("id_rasy", "id_hostitele"),
 CONSTRAINT "rasaID_hostitel_fk"
@@ -148,7 +140,7 @@ CREATE TABLE "TKockaPredmet"(
 "id_predmetu" INT,
 "od" DATE NOT NULL,
 "do" DATE,
-CONSTRAINT "ID_kocka_predmet"
+CONSTRAINT "ID_kocka_predmet_od"
         PRIMARY KEY ("id_kocky", "id_predmetu", "od"), -- Added "od" into primary key in case of one cat owns single item twice
 CONSTRAINT "kockaID_predmet_fk"
         FOREIGN KEY ("id_kocky") REFERENCES "TKocka" ("kocici_cislo")
@@ -187,12 +179,12 @@ VALUES ('Klubko','hra',NULL,1);
 INSERT INTO "TPredmet"("nazev", "typ", "id_hostitele", "id_teritoria")
 VALUES ('Myš','hra',2,2);
 
-INSERT INTO "TZivot"("datum_narozeni","misto_narozeni","datum_umrti","zpusob_umrti","id_kocky","id_teritoria")
-VALUES (TO_DATE('2019.01.10', 'yyyy/mm/dd'),'Praha',TO_DATE('2021.10.02', 'yyyy/mm/dd'),'umrznutí',1,3);
-INSERT INTO "TZivot"("datum_narozeni","misto_narozeni","datum_umrti","zpusob_umrti","id_kocky","id_teritoria")
-VALUES (TO_DATE('2021.10.02', 'yyyy/mm/dd'),'Praha',NULL,NULL,1,NULL);
-INSERT INTO "TZivot"("datum_narozeni","misto_narozeni","datum_umrti","zpusob_umrti","id_kocky","id_teritoria")
-VALUES (TO_DATE('2017.12.24', 'yyyy/mm/dd'),'Kyjov',NULL,NULL,2,NULL);
+INSERT INTO "TZivot"("poradi_zivota", "datum_narozeni","misto_narozeni","datum_umrti","zpusob_umrti","id_kocky","id_teritoria")
+VALUES (1, TO_DATE('2019.01.10', 'yyyy/mm/dd'),'Praha',TO_DATE('2021.10.02', 'yyyy/mm/dd'),'umrznutí',1,3);
+INSERT INTO "TZivot"("poradi_zivota", "datum_narozeni","misto_narozeni","datum_umrti","zpusob_umrti","id_kocky","id_teritoria")
+VALUES (2, TO_DATE('2021.10.02', 'yyyy/mm/dd'),'Praha',NULL,NULL,1,NULL);
+INSERT INTO "TZivot"("poradi_zivota", "datum_narozeni","misto_narozeni","datum_umrti","zpusob_umrti","id_kocky","id_teritoria")
+VALUES (1, TO_DATE('2017.12.24', 'yyyy/mm/dd'),'Kyjov',NULL,NULL,2,NULL);
 INSERT INTO "TKockaTeritorium"("id_kocky","id_teritoria")
 VALUES (1,1);
 
