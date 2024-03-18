@@ -161,22 +161,22 @@ CONSTRAINT "kocka_predmetID_fk"
 
 -- INSERTING TESTING DATA --
 INSERT INTO "TRasa"("nazev_rasy", "barva_oci", "puvod", "prumerna_hmotnost", "prumerny_vek", "charakter")
-VALUES ('Arabská', 'červená', 'Finsko', '20.0', '12', 'klidná, inteligentní, hravá, společenská');
+VALUES ('Arabská', 'červená', 'Finsko', 20.0, 12, 'klidná, inteligentní, hravá, společenská');
 INSERT INTO "TRasa"("nazev_rasy", "barva_oci", "puvod", "prumerna_hmotnost", "prumerny_vek", "charakter")
-VALUES ('Bengálská','modrá','USA','7.5','10','aktivní, temperamentní, svalnaté a pružné tělo');
+VALUES ('Bengálská','modrá','USA', 7.5, 10,'aktivní, temperamentní, svalnaté a pružné tělo');
 INSERT INTO "TRasa"("nazev_rasy", "barva_oci", "puvod", "prumerna_hmotnost", "prumerny_vek", "charakter")
-VALUES ('Siamská','zelená','Thajsko','5.0','15','inteligentní, aktivní, hlasitá');
+VALUES ('Siamská','zelená','Thajsko', 5.0, 15,'inteligentní, aktivní, hlasitá');
 INSERT INTO "TRasa"("nazev_rasy", "barva_oci", "puvod", "prumerna_hmotnost", "prumerny_vek", "charakter")
-VALUES ('Sfinga','žlutá','Egypt','4.0','20','bezsrstá, inteligentní, hravá');
+VALUES ('Sfinga','žlutá','Egypt', 4.0, 20,'bezsrstá, inteligentní, hravá');
 
 INSERT INTO "TKocka"("jmeno", "pohlavi", "hmotnost", "barva_srsti", "opravneni", "rasa")
-VALUES ('Kocouroš','Muž','12.0','oranžová','Uživatel','Arabská');
+VALUES ('Kocouroš','Muž', 12.0,'oranžová','Uživatel','Arabská');
 INSERT INTO "TKocka"("jmeno", "pohlavi", "hmotnost", "barva_srsti", "opravneni", "rasa")
-VALUES ('Maxík','Muž','6.7','černá','Admin','Bengálská');
+VALUES ('Maxík','Muž', 6.7,'černá','Admin','Bengálská');
 INSERT INTO "TKocka"("jmeno", "pohlavi", "hmotnost", "barva_srsti", "opravneni", "rasa")
-VALUES ('Lívaneček', 'Muž', '4.5', 'bílá', 'Uživatel', 'Sfinga');
+VALUES ('Lívaneček', 'Muž', 4.5, 'bílá', 'Uživatel', 'Sfinga');
 INSERT INTO "TKocka"("jmeno", "pohlavi", "hmotnost", "barva_srsti", "opravneni", "rasa")
-VALUES('Micinka', 'Žena', '3.5', 'šedá', 'Uživatel', 'Siamská');
+VALUES('Micinka', 'Žena', 3.5, 'šedá', 'Uživatel', 'Siamská');
 
 INSERT INTO "THostitel"("jmeno","datum_narozeni","pohlavi","ulice","mesto","psc","rc")
 VALUES ('Alfons Mucha', TO_DATE('1952.03.20', 'yyyy/mm/dd'),'Muž','Kolínská 17','Kolín nad Rýnem','71701','5203205634');
