@@ -64,6 +64,11 @@ CREATE TABLE "TTeritorium" (
 "kapacita" INT NOT NULL
 );
 
+
+-- Generalizaci jsme řešili způsobem, že jsme vše dali do jedné tabulky.
+-- jelikož máme pouze jednu specializaci. 
+-- Přidali jsme sloupec datum_umrti a zpusob_umrti a odkaz na teritorium, ve kterém život skončil.
+-- Tyto sloupce jsou NULLABLE v připadě, že život ještě není ukončen.
 CREATE TABLE "TZivot" (
 "poradi_zivota" INT NOT NULL
         CHECK ("poradi_zivota" BETWEEN 1 AND 9),
