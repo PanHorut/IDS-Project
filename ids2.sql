@@ -179,13 +179,13 @@ INSERT INTO "TKocka"("jmeno", "pohlavi", "hmotnost", "barva_srsti", "opravneni",
 VALUES('Micinka', 'Žena', 3.5, 'šedá', 'Uživatel', 'Siamská');
 
 INSERT INTO "THostitel"("jmeno","datum_narozeni","pohlavi","ulice","mesto","psc","rc")
-VALUES ('Alfons Mucha', TO_DATE('1952.03.20', 'yyyy/mm/dd'),'Muž','Kolínská 17','Kolín nad Rýnem','71701','5203205634');
+VALUES ('Alfons Mucha', TO_DATE('1952.03.20', 'yyyy/mm/dd'),'Muž','Kolínská 17','Kolín nad Rýnem',71701,'5203205634');
 INSERT INTO "THostitel"("jmeno","datum_narozeni","pohlavi","ulice","mesto","psc","rc")
-VALUES ('Kristýna Bačíková', TO_DATE('2004.02.11', 'yyyy/mm/dd'),'Žena','507','Petrov','69665','0452115026');
+VALUES ('Kristýna Bačíková', TO_DATE('2004.02.11', 'yyyy/mm/dd'),'Žena','507','Petrov',69665,'0452115026');
 INSERT INTO "THostitel"("jmeno","datum_narozeni","pohlavi","ulice","mesto","psc","rc")
-VALUES ('Josefína Nováková', TO_DATE('1978.04.23', 'yyyy/mm/dd'), 'Žena', 'Chaloupky 105', 'Kyjov', '69701', '7804235043');
+VALUES ('Josefína Nováková', TO_DATE('1978.04.23', 'yyyy/mm/dd'), 'Žena', 'Chaloupky 105', 'Kyjov', 69701, '7804235043');
 INSERT INTO "THostitel"("jmeno","datum_narozeni","pohlavi","ulice","mesto","psc","rc")
-VALUES('David Čermák', TO_DATE('2002.10.07', 'yyyy/mm/dd'), 'Muž', 'Třešňová 1014', 'Strážnice', '69662', '0210074601');
+VALUES('David Čermák', TO_DATE('2002.10.07', 'yyyy/mm/dd'), 'Muž', 'Třešňová 1014', 'Strážnice', 69662, '0210074601');
 
 INSERT INTO "TTeritorium"("nazev","typ","kapacita")
 VALUES ('Zahrada','Domov',5);
