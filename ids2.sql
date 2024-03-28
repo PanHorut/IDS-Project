@@ -132,11 +132,11 @@ CONSTRAINT "kocka_hostitelID_fk"
 
 CREATE TABLE "TRasaHostitel"(
 "id_hostitele" INT NOT NULL,
-"id_rasy" VARCHAR2(100) NOT NULL,
+"nazev_rasy" VARCHAR2(100) NOT NULL,
 CONSTRAINT "ID_rasa_hostitel"
-        PRIMARY KEY ("id_rasy", "id_hostitele"),
+        PRIMARY KEY ("nazev_rasy", "id_hostitele"),
 CONSTRAINT "rasaID_hostitel_fk"
-        FOREIGN KEY ("id_rasy") REFERENCES "TRasa" ("nazev_rasy")
+        FOREIGN KEY ("nazev_rasy") REFERENCES "TRasa" ("nazev_rasy")
         ON DELETE CASCADE,
 CONSTRAINT "rasa_hostitelID_fk"
         FOREIGN KEY ("id_hostitele") REFERENCES "THostitel" ("ID_hostitele")
@@ -177,6 +177,8 @@ INSERT INTO "TKocka"("jmeno", "pohlavi", "hmotnost", "barva_srsti", "opravneni",
 VALUES ('Lívaneček', 'Muž', 4.5, 'bílá', 'Uživatel', 'Sfinga');
 INSERT INTO "TKocka"("jmeno", "pohlavi", "hmotnost", "barva_srsti", "opravneni", "rasa")
 VALUES('Micinka', 'Žena', 3.5, 'šedá', 'Uživatel', 'Siamská');
+INSERT INTO "TKocka"("jmeno", "pohlavi", "hmotnost", "barva_srsti", "opravneni", "rasa")
+VALUES('Míša', 'Žena', 4.0, 'černá', 'Uživatel', 'Sfinga');
 
 INSERT INTO "THostitel"("jmeno","datum_narozeni","pohlavi","ulice","mesto","psc","rc")
 VALUES ('Alfons Mucha', TO_DATE('1952.03.20', 'yyyy/mm/dd'),'Muž','Kolínská 17','Kolín nad Rýnem',71701,'5203205634');
@@ -242,15 +244,15 @@ VALUES (4,4);
 INSERT INTO "TKockaHostitel"("id_kocky","id_hostitele")
 VALUES (4,3);
 
-INSERT INTO "TRasaHostitel"("id_rasy","id_hostitele")
+INSERT INTO "TRasaHostitel"("nazev_rasy","id_hostitele")
 VALUES ('Arabská',1);
-INSERT INTO "TRasaHostitel"("id_rasy","id_hostitele")
+INSERT INTO "TRasaHostitel"("nazev_rasy","id_hostitele")
 VALUES ('Bengálská',3);
-INSERT INTO "TRasaHostitel"("id_rasy","id_hostitele")
+INSERT INTO "TRasaHostitel"("nazev_rasy","id_hostitele")
 VALUES ('Sfinga',3);
-INSERT INTO "TRasaHostitel"("id_rasy","id_hostitele")
+INSERT INTO "TRasaHostitel"("nazev_rasy","id_hostitele")
 VALUES ('Siamská',4);
-INSERT INTO "TRasaHostitel"("id_rasy","id_hostitele")
+INSERT INTO "TRasaHostitel"("nazev_rasy","id_hostitele")
 VALUES ('Sfinga',2);
 
 INSERT INTO "TKockaPredmet"("id_kocky","id_predmetu","od","do")
@@ -265,3 +267,56 @@ INSERT INTO "TKockaPredmet"("id_kocky","id_predmetu","od","do")
 VALUES (4,2,TO_DATE('2024.01.03', 'yyyy/mm/dd'),NULL);
 
 COMMIT;
+
+
+-- SELECTING TESTING DATA --
+
+-- Které rasy preferuje hostitelka "Josefína Nováková"?
+SELECT "nazev_rasy" Rasa
+FROM "THostitel" H, "TRasaHostitel" RH
+WHERE H."ID_hostitele" = RH."id_hostitele"
+  AND H."jmeno" = 'Josefína Nováková' AND H."ID_hostitele" = 3
+ORDER BY "nazev_rasy";
+
+-- Jaké životy prožila kočka "Micinka"?
+SELECT "poradi_zivota" Pořadí, "misto_narozeni" Místo_narození, "datum_narozeni" Datum_narození, "datum_umrti" Datum_úmrtí, "zpusob_umrti" Způsob_úmrtí
+FROM "TZivot" Z, "TKocka" K
+WHERE Z."id_kocky" = K."kocici_cislo"
+  AND K."jmeno" = 'Micinka' AND K."kocici_cislo" = 4
+ORDER BY "poradi_zivota";
+
+-- Které hostitele si podmanila kočka "Micinka"?
+SELECT H."ID_hostitele" ID_Hostitele, H."jmeno" Hostitel, H."pohlavi", H."rc"
+FROM "THostitel" H, "TKockaHostitel" KH, "TKocka" K
+WHERE H."ID_hostitele" = KH."id_hostitele" AND K."kocici_cislo" = KH."id_kocky"
+  AND K."jmeno" = 'Micinka' AND K."kocici_cislo" = 4
+ORDER BY H."jmeno", H."ID_hostitele";
+
+-- Kolik životů prožili jednotlivé kočky?
+SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa, COUNT(*) Počet_životů
+FROM "TKocka" K, "TZivot" Z
+WHERE K."kocici_cislo" = Z."id_kocky"
+GROUP BY K."kocici_cislo", K."jmeno",K."pohlavi", K."rasa"
+ORDER BY K."jmeno", K."kocici_cislo";
+
+-- Kolik teritorií navštivili jednotlivé kočky?
+SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa, COUNT(*) Počet_teritorií
+FROM "TKocka" K, "TKockaTeritorium" KT
+WHERE K."kocici_cislo" = KT."id_kocky"
+GROUP BY K."kocici_cislo", K."jmeno", K."pohlavi", K."rasa"
+ORDER BY K."jmeno", K."kocici_cislo";
+
+-- Které kočky si nepodmanily žádného hostitele?
+SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa
+FROM "TKocka" K
+WHERE NOT EXISTS (SELECT *
+                  FROM "TKockaHostitel" KH
+                  WHERE K."kocici_cislo" = KH."id_kocky")
+ORDER BY K."jmeno", K."kocici_cislo";
+
+-- Které kočky vlastní nějaký předmět?
+SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa
+FROM "TKocka" K
+WHERE K."kocici_cislo" IN (SELECT "id_kocky"
+                            FROM "TKockaPredmet");
+
