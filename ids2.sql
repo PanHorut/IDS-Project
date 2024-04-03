@@ -273,14 +273,14 @@ COMMIT;
 
 -- Které rasy preferuje hostitelka "Josefína Nováková"?
 SELECT "nazev_rasy" Rasa
-FROM "THostitel" H, "TRasaHostitel" RH
+FROM "THostitel" H NATURAL JOIN "TRasaHostitel" RH
 WHERE H."ID_hostitele" = RH."id_hostitele"
   AND H."jmeno" = 'Josefína Nováková' AND H."ID_hostitele" = 3
 ORDER BY "nazev_rasy";
 
 -- Jaké životy prožila kočka "Micinka"?
 SELECT "poradi_zivota" Pořadí, "misto_narozeni" Místo_narození, "datum_narozeni" Datum_narození, "datum_umrti" Datum_úmrtí, "zpusob_umrti" Způsob_úmrtí
-FROM "TZivot" Z, "TKocka" K
+FROM "TZivot" Z NATURAL JOIN "TKocka" K
 WHERE Z."id_kocky" = K."kocici_cislo"
   AND K."jmeno" = 'Micinka' AND K."kocici_cislo" = 4
 ORDER BY "poradi_zivota";
@@ -292,16 +292,16 @@ WHERE H."ID_hostitele" = KH."id_hostitele" AND K."kocici_cislo" = KH."id_kocky"
   AND K."jmeno" = 'Micinka' AND K."kocici_cislo" = 4
 ORDER BY H."jmeno", H."ID_hostitele";
 
--- Kolik životů prožili jednotlivé kočky?
+-- Kolik životů prožily jednotlivé kočky?
 SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa, COUNT(*) Počet_životů
-FROM "TKocka" K, "TZivot" Z
+FROM "TKocka" K NATURAL JOIN "TZivot" Z
 WHERE K."kocici_cislo" = Z."id_kocky"
 GROUP BY K."kocici_cislo", K."jmeno",K."pohlavi", K."rasa"
 ORDER BY K."jmeno", K."kocici_cislo";
 
--- Kolik teritorií navštivili jednotlivé kočky?
+-- Kolik teritorií navštivily jednotlivé kočky?
 SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa, COUNT(*) Počet_teritorií
-FROM "TKocka" K, "TKockaTeritorium" KT
+FROM "TKocka" K NATURAL JOIN "TKockaTeritorium" KT
 WHERE K."kocici_cislo" = KT."id_kocky"
 GROUP BY K."kocici_cislo", K."jmeno", K."pohlavi", K."rasa"
 ORDER BY K."jmeno", K."kocici_cislo";
