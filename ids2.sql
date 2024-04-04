@@ -314,9 +314,11 @@ WHERE NOT EXISTS (SELECT *
                   WHERE K."kocici_cislo" = KH."id_kocky")
 ORDER BY K."jmeno", K."kocici_cislo";
 
--- Které kočky vlastní nějaký předmět?
-SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa
-FROM "TKocka" K
-WHERE K."kocici_cislo" IN (SELECT "id_kocky"
-                            FROM "TKockaPredmet");
-
+-- Jaké předměty vlastní aktuálně jednotlivé kočky kočky?
+SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa, P."nazev" Název_předmětu
+FROM "TKocka" K NATURAL JOIN "TKockaPredmet" KP NATURAL JOIN "TPredmet" P
+WHERE K."kocici_cislo" = KP."id_kocky" AND KP."id_predmetu" = P."ID_predmetu"
+  AND K."kocici_cislo" IN (SELECT "id_kocky"
+                            FROM "TKockaPredmet" KP
+                            WHERE KP."do" IS NULL)
+ORDER BY K."kocici_cislo";
