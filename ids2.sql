@@ -13,6 +13,7 @@ DROP TABLE "TTeritorium";
 DROP TABLE "THostitel";
 DROP TABLE "TKocka";
 DROP TABLE "TRasa";
+DROP SEQUENCE "sekvence_kc";
 
 -- CREATING TABLES --
 CREATE TABLE "TRasa"(
@@ -25,7 +26,7 @@ CREATE TABLE "TRasa"(
 );
 
 CREATE TABLE "TKocka" (
-"kocici_cislo" INT GENERATED AS IDENTITY NOT NULL PRIMARY KEY,
+"kocici_cislo" INT DEFAULT NULL PRIMARY KEY,
 "jmeno" VARCHAR2(50) NOT NULL,
 "pohlavi" VARCHAR2(10) NOT NULL
             CHECK("pohlavi" IN ('Muž', 'Žena', 'Jiné')) ,
@@ -66,7 +67,7 @@ CREATE TABLE "TTeritorium" (
 
 
 -- Generalizaci jsme řešili způsobem, že jsme vše dali do jedné tabulky.
--- jelikož máme pouze jednu specializaci. 
+-- jelikož máme pouze jednu specializaci.
 -- Přidali jsme sloupec datum_umrti a zpusob_umrti a odkaz na teritorium, ve kterém život skončil.
 -- Tyto sloupce jsou NULLABLE v připadě, že život ještě není ukončen.
 CREATE TABLE "TZivot" (
@@ -158,6 +159,38 @@ CONSTRAINT "kocka_predmetID_fk"
         ON DELETE CASCADE
 );
 
+-- TRIGGER --
+
+-- 1) Automaticky generuje kocici cislo --
+CREATE SEQUENCE "sekvence_kc" START WITH 1 INCREMENT BY 1;
+CREATE OR REPLACE TRIGGER "sekvence_kc"
+    BEFORE INSERT ON "TKocka"
+    FOR EACH ROW
+BEGIN
+    IF :NEW."kocici_cislo" IS NULL THEN
+        :NEW."kocici_cislo" := "sekvence_kc".nextval;
+
+    END IF;
+END;
+
+-- 2) Kontroluje, zda se rodne cislo shoduje s datumem narozeni --
+CREATE OR REPLACE TRIGGER "rc_datum_validator"
+    AFTER INSERT ON "THostitel"
+    FOR EACH ROW
+BEGIN
+    IF SUBSTR(:NEW."rc", 1, 2) != TO_CHAR(:NEW."datum_narozeni", 'YY') THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Rok narození se neshoduje s rodným číslem');
+    END IF;
+
+    IF SUBSTR(:NEW."rc", 3, 2) != TO_CHAR(:NEW."datum_narozeni", 'MM') THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Měsíc narození se neshoduje s rodným číslem');
+    END IF;
+
+    IF SUBSTR(:NEW."rc", 5, 2) != TO_CHAR(:NEW."datum_narozeni", 'DD') THEN
+        RAISE_APPLICATION_ERROR(-20001, 'Den narození se neshoduje s rodným číslem');
+    END IF;
+END;
+
 
 -- INSERTING TESTING DATA --
 INSERT INTO "TRasa"("nazev_rasy", "barva_oci", "puvod", "prumerna_hmotnost", "prumerny_vek", "charakter")
@@ -183,7 +216,7 @@ VALUES('Míša', 'Žena', 4.0, 'černá', 'Uživatel', 'Sfinga');
 INSERT INTO "THostitel"("jmeno","datum_narozeni","pohlavi","ulice","mesto","psc","rc")
 VALUES ('Alfons Mucha', TO_DATE('1952.03.20', 'yyyy/mm/dd'),'Muž','Kolínská 17','Kolín nad Rýnem',71701,'5203205634');
 INSERT INTO "THostitel"("jmeno","datum_narozeni","pohlavi","ulice","mesto","psc","rc")
-VALUES ('Kristýna Bačíková', TO_DATE('2004.02.11', 'yyyy/mm/dd'),'Žena','507','Petrov',69665,'0452115026');
+VALUES ('Kristýna Bačíková', TO_DATE('2004.02.11', 'yyyy/mm/dd'),'Žena','507','Petrov',69665,'0402111875');
 INSERT INTO "THostitel"("jmeno","datum_narozeni","pohlavi","ulice","mesto","psc","rc")
 VALUES ('Josefína Nováková', TO_DATE('1978.04.23', 'yyyy/mm/dd'), 'Žena', 'Chaloupky 105', 'Kyjov', 69701, '7804235043');
 INSERT INTO "THostitel"("jmeno","datum_narozeni","pohlavi","ulice","mesto","psc","rc")
@@ -268,55 +301,46 @@ VALUES (4,2,TO_DATE('2024.01.03', 'yyyy/mm/dd'),NULL);
 
 COMMIT;
 
+-- Demonstrace triggerů --
 
--- SELECTING TESTING DATA --
+-- Demonstrace triggeru 1: Podle vložených dat by kočky měly mít primární klíč ("kocici_cislo")
+-- v tomto pořadí:
+-- kocici_cislo | jmeno
+--            1 | Kocouroš
+--            2 | Maxík
+--            3 | Lívaneček
+--            4 | Micinka
+--            5 | Míša
+SELECT * from "TKocka";
 
--- Které rasy preferuje hostitelka "Josefína Nováková"?
-SELECT "nazev_rasy" Rasa
-FROM "THostitel" H NATURAL JOIN "TRasaHostitel" RH
-WHERE H."ID_hostitele" = RH."id_hostitele"
-  AND H."jmeno" = 'Josefína Nováková' AND H."ID_hostitele" = 3
-ORDER BY "nazev_rasy";
+-- Demonstrace triggeru 2: Po zadání datumu narození tak, aby nekorespondovalo s rodným číslem,
+-- dojde k chybě
 
--- Jaké životy prožila kočka "Micinka"?
-SELECT "poradi_zivota" Pořadí, "misto_narozeni" Místo_narození, "datum_narozeni" Datum_narození, "datum_umrti" Datum_úmrtí, "zpusob_umrti" Způsob_úmrtí
-FROM "TZivot" Z NATURAL JOIN "TKocka" K
-WHERE Z."id_kocky" = K."kocici_cislo"
-  AND K."jmeno" = 'Micinka' AND K."kocici_cislo" = 4
-ORDER BY "poradi_zivota";
+-- Neshoda roku
+INSERT INTO "THostitel"("jmeno","datum_narozeni","pohlavi","ulice","mesto","psc","rc")
+VALUES ('Monty Python', TO_DATE('1992.05.12', 'yyyy/mm/dd'),'Muž','Bozetechova 45','Kaliningrad',42014,'8905123414');
 
--- Které hostitele si podmanila kočka "Micinka"?
-SELECT H."ID_hostitele" ID_Hostitele, H."jmeno" Hostitel, H."pohlavi", H."rc"
-FROM "THostitel" H, "TKockaHostitel" KH, "TKocka" K
-WHERE H."ID_hostitele" = KH."id_hostitele" AND K."kocici_cislo" = KH."id_kocky"
-  AND K."jmeno" = 'Micinka' AND K."kocici_cislo" = 4
-ORDER BY H."jmeno", H."ID_hostitele";
+-- Neshoda měsíce
+INSERT INTO "THostitel"("jmeno","datum_narozeni","pohlavi","ulice","mesto","psc","rc")
+VALUES ('Monty Python', TO_DATE('1989.06.12', 'yyyy/mm/dd'),'Muž','Bozetechova 45','Kaliningrad',42014,'8905123414');
+
+--Neshoda dne
+INSERT INTO "THostitel"("jmeno","datum_narozeni","pohlavi","ulice","mesto","psc","rc")
+VALUES ('Monty Python', TO_DATE('1989.05.15', 'yyyy/mm/dd'),'Muž','Bozetechova 45','Kaliningrad',42014,'8905123414');
+
+
+
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
 
 -- Kolik životů prožily jednotlivé kočky?
+EXPLAIN PLAN FOR
 SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa, COUNT(*) Počet_životů
 FROM "TKocka" K NATURAL JOIN "TZivot" Z
 WHERE K."kocici_cislo" = Z."id_kocky"
 GROUP BY K."kocici_cislo", K."jmeno",K."pohlavi", K."rasa"
 ORDER BY K."jmeno", K."kocici_cislo";
 
--- Kolik teritorií navštivily jednotlivé kočky?
-SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa, COUNT(*) Počet_teritorií
-FROM "TKocka" K NATURAL JOIN "TKockaTeritorium" KT
-WHERE K."kocici_cislo" = KT."id_kocky"
-GROUP BY K."kocici_cislo", K."jmeno", K."pohlavi", K."rasa"
-ORDER BY K."jmeno", K."kocici_cislo";
 
--- Které kočky si nepodmanily žádného hostitele?
-SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa
-FROM "TKocka" K
-WHERE NOT EXISTS (SELECT *
-                  FROM "TKockaHostitel" KH
-                  WHERE K."kocici_cislo" = KH."id_kocky")
-ORDER BY K."jmeno", K."kocici_cislo";
 
--- Které kočky vlastní nějaký předmět?
-SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa
-FROM "TKocka" K
-WHERE K."kocici_cislo" IN (SELECT "id_kocky"
-                            FROM "TKockaPredmet");
+
 
