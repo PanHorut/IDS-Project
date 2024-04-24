@@ -400,3 +400,5 @@ BEGIN "how_many_hosts_procent"(4); END;
 -- Příklad použití procedury how_dangerous --
 BEGIN "how_dangerous"(3); END;
 
+
+--
