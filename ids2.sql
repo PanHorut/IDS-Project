@@ -405,15 +405,28 @@ BEGIN "how_many_hosts_procent"(4); END;
 -- Příklad použití procedury how_dangerous --
 BEGIN "how_dangerous"(3); END;
 
--- Kolik životů prožily jednotlivé kočky?
-EXPLAIN PLAN FOR
-SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa, COUNT(*) Počet_životů
-FROM "TKocka" K NATURAL JOIN "TZivot" Z
-WHERE K."kocici_cislo" = Z."id_kocky"
-GROUP BY K."kocici_cislo", K."jmeno",K."pohlavi", K."rasa"
-ORDER BY K."jmeno", K."kocici_cislo";
+-- Které životy kočky Micinky byly ukončeny rukou člověka a které ne --
+WITH prozite_zivoty AS (
+SELECT "poradi_zivota" Pořadí, "misto_narozeni" Místo_narození, "datum_narozeni" Datum_narození, "datum_umrti" Datum_úmrtí, "zpusob_umrti" Způsob_úmrtí
+FROM "TZivot" Z NATURAL JOIN "TKocka" K
+WHERE Z."id_kocky" = K."kocici_cislo"
+  AND K."jmeno" = 'Micinka' AND K."kocici_cislo" = 4
+ORDER BY "poradi_zivota"
+)
+SELECT
+    Datum_úmrtí,
+    Způsob_úmrtí,
+    CASE
+        WHEN Způsob_úmrtí = 'zastřelení' THEN 'Ano'
+        WHEN Způsob_úmrtí = 'umlácení baseballkou' THEN 'Ano'
+        WHEN Způsob_úmrtí = 'shozena z FSI' THEN 'Ano'
+        WHEN Způsob_úmrtí IS NULL AND Datum_úmrtí IS NULL THEN 'Stále žije'
+        ELSE 'Ne'
+    END AS zabita_clovekem
+FROM
+    prozite_zivoty;
 
-SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
+
 -- Přístupová práva --
 
 GRANT SELECT ON "TKocka" TO xhorut01;
