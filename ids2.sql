@@ -328,30 +328,6 @@ VALUES ('Monty Python', TO_DATE('1989.06.12', 'yyyy/mm/dd'),'Muž','Bozetechova 
 INSERT INTO "THostitel"("jmeno","datum_narozeni","pohlavi","ulice","mesto","psc","rc")
 VALUES ('Monty Python', TO_DATE('1989.05.15', 'yyyy/mm/dd'),'Muž','Bozetechova 45','Kaliningrad',42014,'8905123414');
 
-
-
-SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
-
--- Kolik životů prožily jednotlivé kočky?
-EXPLAIN PLAN FOR
-SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa, COUNT(*) Počet_životů
-FROM "TKocka" K NATURAL JOIN "TZivot" Z
-WHERE K."kocici_cislo" = Z."id_kocky"
-GROUP BY K."kocici_cislo", K."jmeno",K."pohlavi", K."rasa"
-ORDER BY K."jmeno", K."kocici_cislo";
-
-
-
-
--- Jaké předměty vlastní aktuálně jednotlivé kočky kočky?
-SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa, P."nazev" Název_předmětu
-FROM "TKocka" K NATURAL JOIN "TKockaPredmet" KP NATURAL JOIN "TPredmet" P
-WHERE K."kocici_cislo" = KP."id_kocky" AND KP."id_predmetu" = P."ID_predmetu"
-  AND K."kocici_cislo" IN (SELECT "id_kocky"
-                            FROM "TKockaPredmet" KP
-                            WHERE KP."do" IS NULL)
-ORDER BY K."kocici_cislo";
-
 -- Uložené procedury --
 
 -- Procedura počítá, kolik procent evidovaných hostitelů si podmanila kočka s daným kočičím číslem.
@@ -429,4 +405,13 @@ BEGIN "how_many_hosts_procent"(4); END;
 -- Příklad použití procedury how_dangerous --
 BEGIN "how_dangerous"(3); END;
 
+-- Kolik životů prožily jednotlivé kočky?
+EXPLAIN PLAN FOR
+SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa, COUNT(*) Počet_životů
+FROM "TKocka" K NATURAL JOIN "TZivot" Z
+WHERE K."kocici_cislo" = Z."id_kocky"
+GROUP BY K."kocici_cislo", K."jmeno",K."pohlavi", K."rasa"
+ORDER BY K."jmeno", K."kocici_cislo";
+
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
 
