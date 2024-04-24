@@ -414,4 +414,18 @@ GROUP BY K."kocici_cislo", K."jmeno",K."pohlavi", K."rasa"
 ORDER BY K."jmeno", K."kocici_cislo";
 
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
+-- Přístupová práva --
 
+GRANT SELECT ON "TKocka" TO xhorut01;
+GRANT ALL ON "THostitel" TO xhorut01;
+GRANT SELECT ON "TTeritorium" TO xhorut01;
+GRANT ALL ON "TPredmet" TO xhorut01;
+GRANT ALL ON "TZivot" TO xhorut01;
+GRANT SELECT ON "TRasa" TO xhorut01;
+GRANT ALL ON "TKockaTeritorium" TO xhorut01;
+GRANT ALL ON "TKockaHostitel" TO xhorut01;
+GRANT SELECT ON "TRasaHostitel" TO xhorut01;
+GRANT ALL ON "TKockaPredmet" TO xhorut01;
+
+GRANT EXECUTE ON "how_many_hosts_procent" TO xhorut01;
+GRANT EXECUTE ON "how_dangerous" TO xhorut01;
