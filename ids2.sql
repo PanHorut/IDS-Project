@@ -14,6 +14,7 @@ DROP TABLE "THostitel";
 DROP TABLE "TKocka";
 DROP TABLE "TRasa";
 DROP SEQUENCE "sekvence_kc";
+DROP MATERIALIZED VIEW "kocky_zivoty";
 
 -- CREATING TABLES --
 CREATE TABLE "TRasa"(
@@ -405,6 +406,8 @@ BEGIN "how_many_hosts_procent"(4); END;
 -- Příklad použití procedury how_dangerous --
 BEGIN "how_dangerous"(3); END;
 
+-- EXPLAIN PLAN před vytvořením indexu --
+
 -- Kolik životů prožily jednotlivé kočky?
 EXPLAIN PLAN FOR
 SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa, COUNT(*) Počet_životů
@@ -414,6 +417,24 @@ GROUP BY K."kocici_cislo", K."jmeno",K."pohlavi", K."rasa"
 ORDER BY K."jmeno", K."kocici_cislo";
 
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
+
+-- Vytvoření indexu
+
+CREATE INDEX "index_id_zivota" ON "TZivot"("id_kocky");
+
+-- EXPLAIN PLAN po vytvoření indexu --
+
+EXPLAIN PLAN FOR
+SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa, COUNT(*) Počet_životů
+FROM "TKocka" K NATURAL JOIN "TZivot" Z
+WHERE K."kocici_cislo" = Z."id_kocky"
+GROUP BY K."kocici_cislo", K."jmeno",K."pohlavi", K."rasa"
+ORDER BY K."jmeno", K."kocici_cislo";
+
+SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY);
+
+DROP INDEX "index_id_zivota";
+
 -- Přístupová práva --
 
 GRANT SELECT ON "TKocka" TO xhorut01;
@@ -429,3 +450,37 @@ GRANT ALL ON "TKockaPredmet" TO xhorut01;
 
 GRANT EXECUTE ON "how_many_hosts_procent" TO xhorut01;
 GRANT EXECUTE ON "how_dangerous" TO xhorut01;
+
+CREATE MATERIALIZED VIEW LOG ON "TZivot" WITH PRIMARY KEY, ROWID INCLUDING NEW VALUES;
+CREATE MATERIALIZED VIEW LOG ON "TKocka" WITH ROWID, SEQUENCE("kocici_cislo", "jmeno", "pohlavi", "hmotnost", "barva_srsti", "opravneni", "rasa") INCLUDING NEW VALUES;
+
+
+CREATE MATERIALIZED VIEW "kocky_zivoty"
+    NOLOGGING
+    CACHE
+    BUILD IMMEDIATE
+    REFRESH FAST ON COMMIT
+    ENABLE QUERY REWRITE
+    AS
+        SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa, COUNT(*) Počet_životů
+        FROM "TKocka" K NATURAL JOIN "TZivot" Z
+        WHERE K."kocici_cislo" = Z."id_kocky"
+        GROUP BY K."kocici_cislo", K."jmeno",K."pohlavi", K."rasa"
+        ORDER BY K."jmeno", K."kocici_cislo";
+
+
+GRANT ALL ON "kocky_zivoty" TO xhorut01;
+
+SELECT * FROM "kocky_zivoty";
+
+-- změna pohlaví kočky s kočičím číslem 1 na "Jiné"
+UPDATE "TKocka"
+SET "pohlavi" = 'Jiné'
+WHERE "kocici_cislo" = 1;
+
+-- V materializovaném pohledu se změna neprojeví.
+SELECT * FROM "kocky_zivoty";
+
+COMMIT;
+
+SELECT * FROM "kocky_zivoty";
