@@ -343,4 +343,90 @@ ORDER BY K."jmeno", K."kocici_cislo";
 
 
 
+-- Jaké předměty vlastní aktuálně jednotlivé kočky kočky?
+SELECT K."kocici_cislo" Kočičí_číslo, K."jmeno" Jméno, K."pohlavi" Pohlaví, K."rasa" Rasa, P."nazev" Název_předmětu
+FROM "TKocka" K NATURAL JOIN "TKockaPredmet" KP NATURAL JOIN "TPredmet" P
+WHERE K."kocici_cislo" = KP."id_kocky" AND KP."id_predmetu" = P."ID_predmetu"
+  AND K."kocici_cislo" IN (SELECT "id_kocky"
+                            FROM "TKockaPredmet" KP
+                            WHERE KP."do" IS NULL)
+ORDER BY K."kocici_cislo";
+
+-- Uložené procedury --
+
+-- Procedura počítá, kolik procent evidovaných hostitelů si podmanila kočka s daným kočičím číslem.
+CREATE OR REPLACE PROCEDURE "how_many_hosts_procent" (kocici_cislo INT) AS
+    pocet_hostitelu INT;
+    pocet_podmanenych INT;
+    jmeno_kocky "TKocka"."jmeno"%TYPE;
+    procent NUMBER(5,2);
+
+    BEGIN
+        SELECT COUNT(*) INTO pocet_hostitelu FROM "THostitel";
+
+        SELECT COUNT(*) INTO pocet_podmanenych
+        FROM "TKockaHostitel" KH
+        WHERE KH."id_kocky" = kocici_cislo;
+
+        SELECT K."jmeno" INTO jmeno_kocky
+        FROM "TKocka" K
+        WHERE "kocici_cislo" = kocici_cislo;
+
+        procent := (pocet_podmanenych / pocet_hostitelu) * 100;
+
+        DBMS_OUTPUT.PUT_LINE('Kočka ' || jmeno_kocky || ' s kočičím číslem ' || kocici_cislo || ' si podmanila ' || procent || '% evidovaných hostitelů.');
+
+    EXCEPTION
+    WHEN ZERO_DIVIDE THEN
+        BEGIN
+            DBMS_OUTPUT.PUT_LINE('Nejsou evidování žádní hostitelé.');
+        END;
+
+    WHEN NO_DATA_FOUND THEN
+        BEGIN
+            DBMS_OUTPUT.PUT_LINE('Chybné kočičí číslo.');
+        END;
+    END;
+
+-- Procedura počítá kolik životů bylo ukončeno v daném teritoriu a vyhodnotí míru nebezpečí tohoto teritoria. --
+CREATE OR REPLACE PROCEDURE "how_dangerous" (ID_teritoria INT) AS
+    CURSOR cursor_deaths IS
+        SELECT Z."id_teritoria"
+        FROM "TZivot" Z
+        WHERE Z."id_teritoria" = ID_teritoria;
+    pocet_umrti INT;
+    v_id_teritoria "TZivot"."id_teritoria"%TYPE;
+    nazev_teritoria "TTeritorium"."nazev"%TYPE;
+
+    BEGIN
+        pocet_umrti := 0;
+        SELECT "nazev" INTO nazev_teritoria
+        FROM "TTeritorium" T
+        WHERE T."ID_teritoria" = ID_teritoria;
+
+        FOR v_id_teritoria IN cursor_deaths LOOP
+                    pocet_umrti := pocet_umrti + 1;
+        END LOOP;
+
+        DBMS_OUTPUT.PUT_LINE('V teritoriu ' || nazev_teritoria || ' s identifikačním číslem ' || ID_teritoria || ' bylo ukončeno životů: ' || pocet_umrti || '.');
+        IF pocet_umrti < 2 THEN
+            DBMS_OUTPUT.PUT_LINE('Teritorium je bezpečné.');
+        ELSIF pocet_umrti < 10 THEN
+            DBMS_OUTPUT.PUT_LINE('Teritorium je středně nebezpečné.');
+        ELSE
+            DBMS_OUTPUT.PUT_LINE('Teritorium je velmi nebezpečné.');
+        END IF;
+
+        EXCEPTION WHEN NO_DATA_FOUND THEN
+        BEGIN
+            DBMS_OUTPUT.PUT_LINE('Chybné identifikační číslo teritoria.');
+        END;
+    END;
+
+-- Příklad použití procedury how_many_hosts --
+BEGIN "how_many_hosts_procent"(4); END;
+
+-- Příklad použití procedury how_dangerous --
+BEGIN "how_dangerous"(3); END;
+
 
